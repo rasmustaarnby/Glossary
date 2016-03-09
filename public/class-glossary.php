@@ -415,7 +415,7 @@ class Glossary {
   public function tooltip_html( $link, $title, $post, $target, $nofollow, $internal ) {
     $link_tooltip = '<span class="glossary-tooltip">'
             . "\n" . '<span class="glossary-tooltip-item">'
-            . "\n" . '<a href="' . $link . '"' . $target . $nofollow . '>' . $title . '</a>'
+            . "\n" . $title //'<a href="' . $link . '"' . $target . $nofollow . '>' . $title . '</a>'
             . "\n" . '</span>'
             . "\n" . '<span class="glossary-tooltip-content clearfix">';
     $photo = get_the_post_thumbnail( $post->ID, 'thumbnail' );
