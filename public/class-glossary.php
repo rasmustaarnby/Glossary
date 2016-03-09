@@ -413,7 +413,7 @@ class Glossary {
    * @return string
    */
   public function tooltip_html( $link, $title, $post, $target, $nofollow, $internal ) {
-    $link = '#';
+    $link = '#!';
     $link_tooltip = '<span class="glossary-tooltip">'
             . "\n" . '<span class="glossary-tooltip-item">'
             . "\n" . '<a href="' . $link . '"' . $target . $nofollow . '>' . $title . '</a>'
