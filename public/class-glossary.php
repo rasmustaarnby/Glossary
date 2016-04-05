@@ -85,7 +85,7 @@ class Glossary {
             )
     );
 
-    add_filter( 'pre_get_posts', array( $this, 'filter_search' ) );
+    // add_filter( 'pre_get_posts', array( $this, 'filter_search' ) );
 
     register_via_taxonomy_core(
             array( __( 'Term Category', $this->get_plugin_slug() ), __( 'Terms Categories', $this->get_plugin_slug() ), 'glossary-cat' ), array(
