@@ -24,7 +24,7 @@ class Glossary {
    *
    * @var     string
    */
-  const VERSION = '1.0.2';
+  const VERSION = '1.0.6';
 
   /**
    * Unique identifier for your plugin.
@@ -84,6 +84,8 @@ class Glossary {
         'supports' => array( 'thumbnail', 'editor', 'title', 'genesis-seo', 'genesis-layouts', 'genesis-cpt-archive-settings' )
             )
     );
+
+    add_filter( 'pre_get_posts', array( $this, 'filter_search' ) );
 
     register_via_taxonomy_core(
             array( __( 'Term Category', $this->get_plugin_slug() ), __( 'Terms Categories', $this->get_plugin_slug() ), 'glossary-cat' ), array(
@@ -172,6 +174,21 @@ class Glossary {
   }
 
   /**
+   * Add support for custom CPT on the search box
+   *
+   * @since    1.0.0
+   *
+   * @param    object    $query
+   */
+  public function filter_search( $query ) {
+    if ( $query->is_search ) {
+      //Mantain support for the post type available
+      $query->set( 'post_type', array_merge( $query->get( 'post_type' ), $this->cpts ) );
+    }
+    return $query;
+  }
+
+  /**
    * AOrder the glossary terms alphabetically
    *
    * @since    1.0.0
@@ -215,8 +232,7 @@ class Glossary {
             $this->g_arc_glossary() ||
             $this->g_tax_glossary()
     ) {
-      $gl_query = new WP_Query( array( 'post_type' => 'glossary', 'order' => 'ASC', 'orderby' => 'title' ) );
-
+      $gl_query = new WP_Query( array( 'post_type' => 'glossary', 'order' => 'ASC', 'orderby' => 'title', 'posts_per_page' => -1 ) );
       while ( $gl_query->have_posts() ) : $gl_query->the_post();
         $link = get_post_meta( get_the_ID(), $this->get_plugin_slug() . '_url', true );
         $target = get_post_meta( get_the_ID(), $this->get_plugin_slug() . '_target', true );
@@ -365,7 +381,7 @@ class Glossary {
    * @return string
    */
   public function search_string( $title ) {
-    return '/((?i)' . $title . '(?-i))(?=[ \.\,\:\;\*\"\'\)\!\?\/\%\$\£\|\^\<\>])(?![^<]*(<\/a>|<\/span>|" \/>|>))/';
+    return '/(?<!\w)((?i)' . $title . '(?-i))(?=[ \.\,\:\;\*\"\)\!\?\/\%\$\£\|\^\<\>])(?![^<]*(<\/a>|<\/span>|" \/>|>))/';
   }
 
   /**
@@ -377,10 +393,14 @@ class Glossary {
    */
   public function get_the_excerpt( $post ) {
     if ( empty( $post->post_excerpt ) ) {
-      return substr( wp_strip_all_tags( $post->post_content ), 0, intval( $this->settings[ 'excerpt_limit' ] ) );
+      $excerpt = apply_filters( 'glossary_excerpt', wp_strip_all_tags( $post->post_content ), $post );
     } else {
-      return substr( wp_strip_all_tags( $post->post_excerpt ), 0, intval( $this->settings[ 'excerpt_limit' ] ) );
+      $excerpt = apply_filters( 'glossary_excerpt', wp_strip_all_tags( $post->post_excerpt ), $post );
     }
+    if ( strlen( $excerpt ) >= absint( $this->settings[ 'excerpt_limit' ] ) ) {
+      return substr( $excerpt, 0, absint( $this->settings[ 'excerpt_limit' ] ) ) . '...';
+    }
+    return $excerpt;
   }
 
   /**
@@ -406,7 +426,7 @@ class Glossary {
     }
     $readmore = '';
     if ( $internal ) {
-      $readmore = '... <a href="' . get_the_permalink() . '">' . __( 'More' ) . '</a>';
+      $readmore = ' <a href="' . get_the_permalink() . '">' . __( 'More' ) . '</a>';
     }
     $excerpt = $this->get_the_excerpt( $post );
     $link_tooltip .= "\n" . '<span class="glossary-tooltip-text">' . $excerpt . $readmore . '</span>'
